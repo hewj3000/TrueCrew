@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TrueCrew • PC Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --purple:#6A0DAD; /* brand primary */
+      --purple-600:#5a0993;
+      --purple-700:#4a087a;
+      --gold:#F2C94C;   /* accent */
+      --ink:#0f0f14;    /* near black */
+      --ink-2:#20212b;  /* surfaces */
+      --ink-3:#2a2c38;  /* cards */
+      --muted:#8b8da3;  /* text muted */
+      --ok:#22c55e;     /* green */
+      --warn:#f59e0b;   /* amber */
+      --err:#ef4444;    /* red */
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:radial-gradient(1200px 800px at 20% -10%, rgba(106,13,173,.25), transparent 60%),
+      linear-gradient(160deg, #13141c 0%, #0e1017 100%);
+      color:#e9e9f4; font-family:Poppins, system-ui, -apple-system, Segoe UI, Roboto, Lato, Arial, sans-serif;
+    }
+    .app{display:grid; grid-template-columns: 280px 1fr; grid-template-rows: auto 1fr auto; min-height:100dvh;}
+    header{
+      grid-column:1 / -1; position:sticky; top:0; z-index:10; backdrop-filter:saturate(120%) blur(8px);
+      background:linear-gradient(180deg, rgba(26,18,36,.85), rgba(26,18,36,.55));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .topbar{display:flex; align-items:center; gap:18px; padding:18px 22px;}
+    .logo{display:flex; align-items:center; gap:12px; font-weight:700; letter-spacing:.3px}
+    .logo .mark{width:36px; height:36px; border-radius:10px; background:conic-gradient(from 210deg, var(--gold), var(--purple)); box-shadow:0 6px 24px rgba(242,201,76,.35), inset 0 0 0 1px rgba(255,255,255,.08)}
+    .tagline{font:500 12px/1 Lato, sans-serif; color:var(--muted)}
+    .spacer{flex:1}
+    .mini-kpis{display:grid; grid-auto-flow:column; gap:12px}
+    .chip{display:flex; align-items:center; gap:10px; padding:10px 12px; background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.08); border-radius:999px; font-weight:600}
+    .chip span{font:700 14px/1 Poppins}
+
+    aside{
+      border-right:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      padding:18px; position:sticky; top:66px; align-self:start; height:calc(100dvh - 66px);
+      overflow:auto;
+    }
+    .nav-title{color:#cfcff2; font-size:12px; letter-spacing:.12em; text-transform:uppercase; margin:8px 0 14px}
+    .nav{display:grid; gap:8px}
+    .nav button{
+      all:unset; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; cursor:pointer; color:#e8e7fb;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      transition:.18s ease;
+    }
+    .nav button:hover{transform:translateY(-1px); box-shadow:var(--shadow)}
+    .nav button.active{background:linear-gradient(180deg, rgba(106,13,173,.35), rgba(106,13,173,.12)); border-color:rgba(242,201,76,.35)}
+    .nav .icon{width:18px; height:18px; opacity:.9}
+
+    main{padding:22px 24px;}
+    .section{display:none;}
+    .section.active{display:block; animation:fade .25s ease}
+    @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+    .grid{display:grid; gap:16px}
+    .grid.cols-4{grid-template-columns: repeat(4, minmax(0,1fr))}
+    .grid.cols-3{grid-template-columns: repeat(3, minmax(0,1fr))}
+    .grid.cols-2{grid-template-columns: repeat(2, minmax(0,1fr))}
+    @media(max-width:1200px){.grid.cols-4{grid-template-columns: repeat(2,1fr)}}
+    @media(max-width:900px){.app{grid-template-columns: 1fr}.grid.cols-3{grid-template-columns:1fr}.grid.cols-4{grid-template-columns:1fr}}
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+      border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:16px 16px 14px; box-shadow:0 6px 24px rgba(0,0,0,.25)
+    }
+    .card h3{margin:0 0 6px; font-size:15px}
+    .muted{color:var(--muted); font:400 13px/1.5 Lato, sans-serif}
+
+    .kpi{display:flex; align-items:center; justify-content:space-between}
+    .kpi .value{font-size:28px; font-weight:800}
+
+    .btn{
+      display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(106,13,173,.35), rgba(106,13,173,.12)); color:#fff; font-weight:600; cursor:pointer; transition:.18s ease
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow)}
+    .btn.secondary{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02))}
+
+    .list{display:grid; gap:10px; margin-top:8px}
+    .list a, .pill{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:12px; border:1px dashed rgba(255,255,255,.12); text-decoration:none; color:#e9e9f4; background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02))}
+    .list a:hover{border-style:solid}
+
+    footer{
+      grid-column:1 / -1; display:flex; gap:12px; align-items:center; justify-content:center; padding:16px; border-top:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.04)); position:sticky; bottom:0; z-index:5;
+    }
+
+    .dock{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+    .dock .btn{padding:10px 16px}
+
+    .tiny{font-size:11px; color:var(--muted)}
+    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:rgba(242,201,76,.14); border:1px solid rgba(242,201,76,.35); color:#fff; font-weight:700;}
+
+    /* table */
+    table{width:100%; border-collapse:separate; border-spacing:0 10px;}
+    thead th{font:600 12px Poppins; text-transform:uppercase; letter-spacing:.06em; color:#cfcff2; text-align:left}
+    tbody td{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.06); padding:12px 14px;}
+    tbody tr td:first-child{border-top-left-radius:12px; border-bottom-left-radius:12px}
+    tbody tr td:last-child{border-top-right-radius:12px; border-bottom-right-radius:12px}
+
+    .search{display:flex; gap:8px; margin-top:8px}
+    .search input{flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff; padding:10px 12px; border-radius:10px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Top -->
+    <header>
+      <div class="topbar">
+        <div class="logo" title="TrueCrew">
+          <div class="mark"></div>
+          <div>
+            <div>TrueCrew <span class="badge">PC Command Center</span></div>
+            <div class="tagline">Jamaica’s online job agency for hospitality & local services</div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="mini-kpis">
+          <div class="chip">Verified Workers: <span id="kpi-workers">0</span></div>
+          <div class="chip">Active Jobs: <span id="kpi-jobs">0</span></div>
+          <div class="chip">Pending Apps: <span id="kpi-pending">0</span></div>
+          <div class="chip">Next Milestone: <span id="kpi-milestone">—</span></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sidebar Nav -->
+    <aside>
+      <div class="nav-title">Control Tabs</div>
+      <div class="nav" id="nav">
+        <button class="active" data-target="brand">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l3 7 7 .5-5.5 4.7L18 22l-6-3.5L6 22l1.5-6.8L2 10.5 9 10l3-7z"/></svg>
+          Brand & Design
+        </button>
+        <button data-target="dev">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+          Development
+        </button>
+        <button data-target="ops">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3z"/><path d="M3 11h18v10H3z"/><path d="M7 7v4m5-4v4m5-4v4"/></svg>
+          Operations
+        </button>
+        <button data-target="mkt">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-6 9 6-9 6-9-6z"/><path d="M21 10v6"/><path d="M3 10v6"/><path d="M7 13v7"/><path d="M17 13v7"/></svg>
+          Marketing
+        </button>
+        <button data-target="vision">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/></svg>
+          Vision & Mindset
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main>
+      <!-- BRAND & DESIGN -->
+      <section id="brand" class="section active">
+        <div class="grid cols-4">
+          <div class="card">
+            <h3>Logo & Variations</h3>
+            <div class="muted">Drop your SVG/PNG here later. Keep master files in /Design/Logos</div>
+            <div class="list" id="logoList">
+              <a href="#" target="_blank">Master Logo • SVG <span class="tiny">/Design/Logos/master.svg</span></a>
+              <a href="#" target="_blank">Icon Only • PNG <span class="tiny">/Design/Logos/icon.png</span></a>
+              <a href="#" target="_blank">Wordmark • SVG <span class="tiny">/Design/Logos/wordmark.svg</span></a>
+            </div>
+            <button class="btn" onclick="toast('Upload tips: keep SVG, export 1024px PNG')">Upload Tips</button>
+          </div>
+          <div class="card">
+            <h3>Color Palette</h3>
+            <div class="list">
+              <div class="pill"><span>Primary Purple</span> <code>#6A0DAD</code></div>
+              <div class="pill"><span>Gold Accent</span> <code>#F2C94C</code></div>
+              <div class="pill"><span>Ink</span> <code>#0F0F14</code></div>
+              <div class="pill"><span>Surface</span> <code>#2A2C38</code></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Fonts</h3>
+            <div class="list">
+              <div class="pill"><span>Poppins</span> <span class="tiny">UI / Headings</span></div>
+              <div class="pill"><span>Lato</span> <span class="tiny">Body text</span></div>
+            </div>
+            <button class="btn secondary" onclick="toast('Both fonts loaded via Google Fonts tag in <head>')">How to use</button>
+          </div>
+          <div class="card">
+            <h3>Templates</h3>
+            <div class="list" id="templateList">
+              <a href="#">Flyer A4 • PSD <span class="tiny">/Design/Templates/FlyerA4.psd</span></a>
+              <a href="#">IG Post 1080 • PNG <span class="tiny">/Design/Templates/IG1080.png</span></a>
+              <a href="#">Email Banner • PNG <span class="tiny">/Design/Templates/EmailHeader.png</span></a>
+            </div>
+            <button class="btn" onclick="toast('We can auto-export sizes later from a design file')">Export Tip</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEVELOPMENT -->
+      <section id="dev" class="section">
+        <div class="grid cols-3">
+          <div class="card">
+            <h3>Prototype Links</h3>
+            <div class="list" id="protoLinks">
+              <a href="#">CodePen: Landing v1 <span class="tiny">(add link)</span></a>
+              <a href="#">TeleportHQ: UI <span class="tiny">(add link)</span></a>
+              <a href="#">GitHub Repo <span class="tiny">(add link)</span></a>
+            </div>
+            <div class="search"><input placeholder="Paste link and press Enter" id="protoInput"/></div>
+          </div>
+          <div class="card">
+            <h3>Snippets</h3>
+            <div class="list">
+              <a href="#">Hero Section • HTML</a>
+              <a href="#">Buttons • CSS</a>
+              <a href="#">Tab Switcher • JS</a>
+            </div>
+            <button class="btn" onclick="toast('Ask me for any snippet and paste it here')">Request Snippet</button>
+          </div>
+          <div class="card">
+            <h3>System Docs</h3>
+            <div class="list">
+              <a href="#">Worker Verification Flow</a>
+              <a href="#">Booking Request Script</a>
+              <a href="#">Employer Portal UI Plan</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- OPERATIONS -->
+      <section id="ops" class="section">
+        <div class="grid cols-3">
+          <div class="card">
+            <h3>Staffing Database</h3>
+            <div class="muted">Quick search your roster</div>
+            <div class="search"><input placeholder="Search name, role or location" id="searchInput"></div>
+            <div style="overflow:auto; margin-top:12px">
+              <table id="staffTable">
+                <thead>
+                  <tr><th>Name</th><th>Role</th><th>Rating</th><th>Location</th><th>Verified</th><th>Last Job</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <h3>PDF & Forms</h3>
+            <div class="list">
+              <a href="#">Worker Contract • PDF</a>
+              <a href="#">ID Verification • PDF</a>
+              <a href="#">Incident Report • PDF</a>
+            </div>
+            <button class="btn" onclick="toast('We can auto-fill these with data later')">Auto‑fill Later</button>
+          </div>
+          <div class="card">
+            <h3>Automations</h3>
+            <div class="list">
+              <div class="pill">New booking → Send confirmation email</div>
+              <div class="pill">Job complete → Request rating</div>
+              <div class="pill">Expired docs → Notify worker</div>
+            </div>
+            <button class="btn secondary" onclick="toast('We’ll wire this to Google Apps Script or backend later')">Integration Plan</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MARKETING -->
+      <section id="mkt" class="section">
+        <div class="grid cols-3">
+          <div class="card">
+            <h3>Campaigns</h3>
+            <div class="list" id="campaignList">
+              <a href="#">“Verified Bartenders” • Awareness</a>
+              <a href="#">“Event‑Ready Staffing” • Lead Gen</a>
+              <a href="#">“Community & Safety” • PR</a>
+            </div>
+            <button class="btn" onclick="toast('I can draft ads + captions on request')">Draft with AI</button>
+          </div>
+          <div class="card">
+            <h3>Press Kit</h3>
+            <div class="list">
+              <a href="#">1‑Pager • PDF</a>
+              <a href="#">Brand Story • Doc</a>
+              <a href="#">Screenshots • ZIP</a>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Content Calendar</h3>
+            <div class="muted">Plan weekly posts for IG / LinkedIn / Substack</div>
+            <div class="list">
+              <div class="pill">Mon • Staff spotlight</div>
+              <div class="pill">Wed • Safety tip</div>
+              <div class="pill">Fri • Client win</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISION & MINDSET -->
+      <section id="vision" class="section">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>Mission Journal</h3>
+            <div class="muted">“App speed + agency trust” — write the reality you’re building.</div>
+            <textarea id="journal" rows="10" style="width:100%; margin-top:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff; padding:12px; border-radius:12px"></textarea>
+            <div style="display:flex; gap:10px; margin-top:10px">
+              <button class="btn" id="saveJournal">Save</button>
+              <button class="btn secondary" id="clearJournal">Clear</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Mantra</h3>
+            <div class="list">
+              <div class="pill">“My focus is unbreakable; I see opportunity everywhere.”</div>
+              <div class="pill">“Transparency. Safety. Verified workers. Direct booking.”</div>
+              <div class="pill">“Jamaica‑first. Community‑focused.”</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Dock -->
+    <footer>
+      <div class="dock">
+        <button class="btn" onclick="toast('Open your Drive root for TrueCrew')">Open Drive Folder</button>
+        <button class="btn" onclick="toast('GitHub sync coming next')">Sync GitHub Repo</button>
+        <button class="btn" onclick="toast('Preview campaign creatives')">Launch Marketing Preview</button>
+        <button class="btn" onclick="toast('Generating weekly worker PDF… (stub)')">Generate Worker Summary PDF</button>
+        <button class="btn secondary" onclick="toast('Hey Jerome — Sophia is listening.')">Chat with Sophia</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" style="position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); opacity:0; background:linear-gradient(180deg, rgba(26,18,36,.95), rgba(26,18,36,.85)); border:1px solid rgba(242,201,76,.35); color:#fff; padding:12px 16px; border-radius:12px; box-shadow:var(--shadow); transition:.25s ease; pointer-events:none"></div>
+
+  <script>
+    // --- Simple data store (can be swapped for a backend later)
+    const state = {
+      kpis: { workers: 127, jobs: 9, pending: 14, milestone: 'Beta Launch' },
+      staff: [
+        {name:'A. Williams', role:'Bartender', rating:4.8, loc:'Kingston', verified:true, last:'2025‑10‑18'},
+        {name:'S. Brown', role:'Barback', rating:4.4, loc:'Portmore', verified:true, last:'2025‑10‑19'},
+        {name:'D. Thomas', role:'Mixologist', rating:4.9, loc:'Montego Bay', verified:true, last:'2025‑10‑12'},
+        {name:'K. Johnson', role:'Wait Staff', rating:4.6, loc:'Kingston', verified:false, last:'2025‑10‑05'},
+        {name:'M. Smith', role:'Security', rating:4.7, loc:'Ocho Rios', verified:true, last:'2025‑10‑22'},
+        {name:'R. Clarke', role:'Bartender', rating:4.3, loc:'Spanish Town', verified:false, last:'2025‑09‑30'}
+      ]
+    };
+
+    // --- KPIs
+    const setKpis = () => {
+      document.getElementById('kpi-workers').textContent = state.kpis.workers;
+      document.getElementById('kpi-jobs').textContent = state.kpis.jobs;
+      document.getElementById('kpi-pending').textContent = state.kpis.pending;
+      document.getElementById('kpi-milestone').textContent = state.kpis.milestone;
+    };
+
+    // --- Nav tabs
+    const nav = document.getElementById('nav');
+    const sections = [...document.querySelectorAll('.section')];
+    nav.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const id = btn.dataset.target;
+      sections.forEach(s=>s.classList.toggle('active', s.id===id));
+    });
+
+    // --- Ops: render staff table & search
+    const renderTable = (rows) => {
+      const tbody = document.querySelector('#staffTable tbody');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.name}</td>
+          <td>${r.role}</td>
+          <td>${r.rating.toFixed(1)}</td>
+          <td>${r.loc}</td>
+          <td>${r.verified ? '✅' : '⌛'}</td>
+          <td>${r.last}</td>
+        </tr>
+      `).join('');
+    };
+
+    const searchInput = document.getElementById('searchInput');
+    const applySearch = () => {
+      const q = (searchInput.value||'').toLowerCase();
+      const filtered = state.staff.filter(r =>
+        r.name.toLowerCase().includes(q) ||
+        r.role.toLowerCase().includes(q) ||
+        r.loc.toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    };
+    if(searchInput){
+      searchInput.addEventListener('input', applySearch);
+    }
+
+    // --- Dev: quick add prototype link (saved to localStorage for this browser only)
+    const protoInput = document.getElementById('protoInput');
+    const protoList = document.getElementById('protoLinks');
+    const loadProtos = () => {
+      const saved = JSON.parse(localStorage.getItem('truecrew.protos')||'[]');
+      saved.forEach(url => {
+        const a = document.createElement('a'); a.href=url; a.target='_blank'; a.textContent=url; protoList.appendChild(a);
+      });
+    };
+    if(protoInput){
+      protoInput.addEventListener('keydown', (e)=>{
+        if(e.key==='Enter' && protoInput.value.trim()){
+          try{
+            const url = protoInput.value.trim();
+            const saved = JSON.parse(localStorage.getItem('truecrew.protos')||'[]');
+            saved.push(url); localStorage.setItem('truecrew.protos', JSON.stringify(saved));
+            const a = document.createElement('a'); a.href=url; a.target='_blank'; a.textContent=url; protoList.appendChild(a);
+            protoInput.value='';
+            toast('Prototype link saved');
+          }catch(err){ toast('Could not save link'); }
+        }
+      });
+    }
+
+    // --- Vision: journal saved locally
+    const journal = document.getElementById('journal');
+    const saveJournalBtn = document.getElementById('saveJournal');
+    const clearJournalBtn = document.getElementById('clearJournal');
+    const JKEY = 'truecrew.journal';
+    if(journal){
+      journal.value = localStorage.getItem(JKEY)||'';
+      saveJournalBtn.addEventListener('click', ()=>{ localStorage.setItem(JKEY, journal.value||''); toast('Journal saved'); });
+      clearJournalBtn.addEventListener('click', ()=>{ localStorage.removeItem(JKEY); journal.value=''; toast('Journal cleared'); });
+    }
+
+    // --- Toast helper
+    const toastEl = document.getElementById('toast');
+    let toastTimer;
+    function toast(msg){
+      toastEl.textContent = msg;
+      clearTimeout(toastTimer);
+      toastEl.style.opacity = 1; toastEl.style.transform = 'translateX(-50%) translateY(0)';
+      toastTimer = setTimeout(()=>{ toastEl.style.opacity = 0; toastEl.style.transform = 'translateX(-50%) translateY(20px)'; }, 1800);
+    }
+
+    // --- Init
+    setKpis();
+    renderTable(state.staff);
+    loadProtos();
+  </script>
+</body>
+</html>
